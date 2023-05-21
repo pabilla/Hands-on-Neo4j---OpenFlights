@@ -5,7 +5,7 @@ uri = "bolt://44.199.210.122:7687"
 id = "neo4j"
 password = "certification-nameplate-steels"
 
-driver = GraphDatabase.driver(uri, auth=(id, password))
+driver = GraphDatabase.driver(uri, auth=(id, password), encrypted=False)
 
 with open('airports.csv', newline='', encoding='utf-8') as csvfile1, \
         open('routes.csv', newline='', encoding='utf-8') as csvfile2:
@@ -18,7 +18,7 @@ with open('airports.csv', newline='', encoding='utf-8') as csvfile1, \
     for row in reader1:
         print(row)
         query = """
-            CREATE (a:Airport {id: $id, nom: $nom, ville: $ville, pays: $pays, ICAO: $ICAO, IATA: $IATA})
+            MERGE (a:Airport {id: $id, nom: $nom, ville: $ville, pays: $pays, ICAO: $ICAO, IATA: $IATA})
         """
         params = {"id": row[0], "nom": row[1], "ville": row[2], "pays": row[3], "ICAO": row[4], "IATA": row[5]}
         with driver.session() as session:
@@ -36,10 +36,12 @@ with open('airports.csv', newline='', encoding='utf-8') as csvfile1, \
             query = """
                 MATCH (source:Airport {id: $source_id})
                 MATCH (dest:Airport {id: $dest_id})
-                CREATE (source)-[r:Route {Id_Airline: $Id_Airline, Source_Airport_ID: $source_id,
+                MERGE (source)-[r:Route {Id_Airline: $Id_Airline, Source_Airport_ID: $source_id,
                     Destination_Airport_ID: $dest_id, Stop: $Stop, Equipement: $Equipement}]->(dest)
             """
             params = {"source_id": source_id, "dest_id": dest_id, "Id_Airline": row[1], "Stop": row[7], "Equipement": row[8]}
             with driver.session() as session:
                 session.run(query, params)
+
+
 
